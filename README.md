@@ -1,1 +1,1 @@
-# datathesis
+# maththesis
