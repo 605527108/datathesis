@@ -1,6 +1,6 @@
 \chapter{用户上网数据采集与处理}
 本章主要介绍用户上网如何留下信息，如何将上网信息转变为推荐系统所需要的训练集。其中包括了以下内容：网络流量信息采集、打开URL后发生了什么、如何给原数据库中没有的url分类、如何格式化、存储
-\section{网络信息传递流程}
+\section{网络信息结构及内容}
 互联网用户通过各类软件发送、接受信息。对于不同的软件，有不同的信息发送、接受格式,称作协议。以大多数网络浏览器使用的基本HTTP协议来说，其请求的头部有以下常用的信息 \\
 \begin{center}
 \tablecaption{HTTP协议请求头部常用的信息}
@@ -16,8 +16,10 @@ User-Agent & The user agent string of the user agent \\
 \hline
 \end{tabular}
 \end{center}
+
 根据以上HTTP请求头部我们可以获得用户请求网站URL，请求时间，使用浏览器类型信息。
-这里画张图给出请求和反馈流程
+（这里画张图给出请求和反馈流程）
+
 当然对于纪录了所有网络流量包的情况，我们甚至可以解压信息包，获得网页信息。对于使用其他协议的软件来说，只要按照该协议的约定，也能正确解压信息包，获取其中内容。
 \section{网络流量信息采集与处理}
 目前，国内外比较流行使用的网络流量信息采集方式有Cisco公司开发的NetFlow工具。支持NetFlow的路由器和交换机能够收集所有接口上IP交换数据，并且能把数据导出到NetFlow信息分析服务器上。
@@ -25,18 +27,22 @@ User-Agent & The user agent string of the user agent \\
 在“基于流量监测的网络用户行为分析.pdf”的P22页有插图，
 基于网络流量监测的移动互联网特征研究.pdfP28页有介绍。
 
-本文根据后面系统模块所需信息设计采集模块以及处理集群。对于每个地区的路由器或者交换机，都连接到信息分析服务器。信息分析服务器纪录如下信息，将不是Content-Type不是内容的文件过滤，比如js和css文件。
-\begin{enumerate}
- \item User ID
- \item Request URL
- \item Time
- \item Location
- \item Content
- \item Device
-\end{enumerate}
-从URL能读取出部分信息，有时也包含关键词。我们主要分析HTML文件。HTML文件由各种标签包含各种文字信息。首先要去除各种标签，在Boilerplate Detection Using Shallow Text Features中介绍如何监督学习去除标签。在Mining the Social web 2nd P183
-将语义分析网页，根据内容取主要标记。
-然后会有特征向量重合以及极度稀疏化的情况，怎么处理
+本文根据后面系统模块所需信息设计采集模块以及处理集群。对于每个地区的路由器或者交换机，都连接到信息分析服务器。信息分析服务器记录如下信息，将不是Content-Type不是内容的文件过滤，比如js和css文件。
+\begin{center}
+\tablecaption{信息分析服务器记录信息格式}
+\begin{tabular}{c|c|c|c|c|c}
+	\hline
+	User ID & Request URL & Time & Location & Content & Device \\
+	\hline
+\end{tabular}
+\end{center}
+
+Web page classification: Features and algorithms（引文？）
+从URL能读取出部分信息，有时也包含关键词。我们主要分析HTML文件。HTML文件由各种标签包含各种文字信息。
+首先要去除各种标签，在Boilerplate Detection Using Shallow Text Features中介绍如何监督学习去除标签。
+在Mining the Social web 2nd P183
+将语义分析网页，根据内容取主要标记。需要语料库corpus。
+然后会有特征向量重合以及极度稀疏化的情况，接上PAC
 以上能hadoop吗？
 之后将生成的记录传入下一个模块
 \begin{enumerate}
