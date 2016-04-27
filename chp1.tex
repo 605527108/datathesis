@@ -10,8 +10,12 @@
 之后，推荐系统被应用于各种类型的互联网服务中。
 比如影视服务方面，视频网站Netflix将推荐系统与A/B testing结合起来\parencite{Gomez2015The}。
 Google旗下的YouTube给用户推荐视频\parencite{Davidson2010The}。
-本文所介绍的系统与前者有所不同。
-本文从互联网提供商（ISP）的流量分析入手。
+
+目前推荐系统的主要使用协同过滤算法。有两种等效的协同过滤算法，一种是基于用户的协同过滤，另一种是基于物品的协同过滤。
+基于用户的协同过滤算法通过对相似用户的评分求和来预测用户对目标物品的评分\parencite{resnick1994grouplens}。
+基于用户协同过滤算法是该类算法的最简形式\parencite{adomavicius2005toward}，它能推广到其他复杂模型，比如引入细颗粒度的邻近权重因子\parencite{herlocker2000explaining}，迭代寻找邻近方法\parencite{Zhang2007A}，或者基于用户的个人资料计算用户相似度\parencite{shi2009exploiting}。
+
+本文所介绍的系统从互联网提供商（ISP）的流量分析入手。
 由于大多数用户通过ISP上网，ISP的节点路由或者交换机能采集到用户访问各种类型的网站的流量。
 这与之前提到的公司不同，他们只关注与公司业务相关的流量。
 从ISP的角度看，我们可以全天候地提供全方位的推荐。

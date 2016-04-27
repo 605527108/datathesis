@@ -369,15 +369,126 @@ User-Agent & The user agent string of the user agent \\
 
 按照第二章第一节描述的语义分析原理，本模块首先分析得出所有关键词。
 从关键词中取出所有名词，并按照出现次数进行排序。
-将高频名词按照以下格式输出到下一模块中。
+将高频名词按照以下格式输出保存。
 \begin{center}
 \tablecaption{信息分析服务器输出信息格式}
 \begin{tabular}{c|c|c|c|c|c}
 	\hline
-	User ID & Request URL & Time & Location & Category & Device \\
+	User ID & Request URL & Time & Location & Item & Device \\
 	\hline
 \end{tabular}
 \end{center}
-
 \section{基于大数据处理的推荐算法}
-写不下去了
+根据Hadoop与MapReduce的原理及特点，我们可以将协同过滤算法计算过程分解到Map阶段与Reduce阶段中。
+
+首先要进行简单的计数工作，即计算每个User-Item对的数目。
+将该数目代入逻辑函数$S(t)=1/(1+e^{-t})$进行简单的归一化。
+得到User-Item-Value格式的一组数据，形成下一步所需的User-Item矩阵，记为$R=\{<i,j,r_{i,j}>\}$，保存于Hadoop的HDFS中。
+以下假设$n$个用户，$m$个物品，
+
+\subsection{计算每个用户的平均评分}
+每个用户$i$的平均评分可以如下计算：
+\[
+\bar{r_i} = \frac{\sum_{j=1}^n r_{i,j}}{\sum_{k=1}^l 1}\qquad \forall i\in [1,n]
+\]
+其中$l$表示该用户评价了几个物品。
+
+生成的平均评分数据集记为$U_{all}=\{<i,\bar{r}_i>\},\forall i\in [1,n]$。具体的Map与Reduce算法如下：
+\begin{description}
+\item[Map-I:] 将$i$相同的$<i,j,r_{i,j}>$映射到同一个机器中，简记为$<j,r_{i,j}>$。对于$k$个机器，本步骤的复杂度为$o(\frac{nm}{k})$。
+\item[Reduce-I:] 取出$<i,j,r_{i,j},\bar{r}_i>$，保存到HDFS中，此时将$R$指向$\{<i,j,r_{i,j},\bar{r}_i>\}$。另外保存$U_{all}=\{<i,\bar{r}_i>\},\forall i\in [1,n]$到HDFS中。本步骤的复杂度同样为$o(\frac{nm}{k})$。
+\end{description}
+
+\subsection{计算用户间相似度}
+计算用户间相似度矩阵$S={S_{i,j}|\forall i,j\in[1,n]}$。
+定义$U_i = \{<i,j,r_{i,j},\bar{r}_i>|\forall j \in [1,m],<i,j,r_{i,j},\bar{r}_i>\in R\}$为用户$i$评价过的物品集。
+定义$N_{k,l} = U_k \cap U_l$，为用户$k$与用户$l$共同评价过的物品集。
+为了计算可行性，$N_{k,l}$将分到同一个节点上。具体的Map与Reduce算法如下：
+\begin{description}
+\item[Map-II:] 将$\{U_i|i\in [1,n]\}$映射为$\{N_i,j|\forall i,j\in [1,n]\}$。如果有$k$个机器，本步骤的复杂度为$o(\frac{m^2n}{k})$。
+\item[Reduce-II:] 取出$\{S_{i,j}|\forall i,j\in [1,n]\}$，保存到HDFS中。本步骤的复杂度为$o(\frac{m^2n}{k})$。
+\end{description}
+此步骤可以看出可以看出，对于物品数远大于用户数的情况，本算法更适合于用户数远大于物品数的情况。
+
+\subsection{计算预测矩阵}
+将矩阵$R$变形为矩阵$I$，其中矩阵$I$的数据按物品的序号排序：
+\begin{equation}
+I=\left(
+\begin{array}{c}
+I_1 \\
+I_2 \\
+\vdots \\
+I_m
+\end{array}
+\right) = \{I_j|\forall j\in [1,m] \}
+\end{equation}
+其中
+\begin{equation}
+I_j=\left(
+\begin{array}{c}
+<1,j,r_{1,j},\bar{r}_1 > \\
+<2,j,r_{2,j},\bar{r}_2 > \\
+\vdots \\
+<n,j,r_{n,j},\bar{r}_n >
+\end{array}
+\right) = \{<i,j,r_{i,j},\bar{r}_i >|\forall i\in [1,n], <i,j,r_{i,j},\bar{r}_i > \in R\}
+\end{equation}
+即$I_j$表示与物品$j$相关的所有评分数据集。
+定义相似度矩阵$S$为
+\begin{equation}
+S=\left(
+\begin{array}{ccc}
+S_{1,1} & \ldots & S_{1,n} \\
+\vdots & \vdots & \vdots \\
+S_{n,1} & \ldots & S_{n,n} \\
+\end{array}
+\right) = \left(
+\begin{array}{c}
+S_1 \\
+\vdots\\
+S_n
+\end{array}
+\right)
+\end{equation}
+其中$S_i=\{S_{i,j}|\forall j\in [1,n] \}$表示用户$i$与其它用户间的相似度。
+具体的Map与Reduce算法如下：
+\begin{description}
+\item[Map-III:] 将$j$相同的$<i,j,r_{i,j}>$映射到同一个机器中，简记为$<j,r_{i,j}>$，同时将$S_i$映射到同一个机器中。对于$k$个机器，本步骤的复杂度为$o(\frac{nm}{k})$。
+\item[Reduce-III:] 取出$B=<i,j,r_{i,j},\bar{r}_i ,S_i>$，保存到HDFS中。本步骤的复杂度为$o(\frac{m^2n}{k})$。
+\end{description}
+这一步是为计算预测矩阵做准备。按照第二章的公式计算用户$i$对物品$j$的评分$p_{i,j}$。预测矩阵$P$定义为：
+\begin{equation}
+P=\left(
+\begin{array}{c}
+ \{ p_{1,1},p_{1,3},p_{1,5} \} \\
+\vdots \\
+\{ p_{i,1},p_{i,3},p_{i,5} \} \\
+\vdots \\
+\{p_{n,1},p_{n,3},p_{n,5}\}
+\end{array}
+\right) = \left(
+\begin{array}{c}
+P_1 \\
+\vdots\\
+P_i\\
+\vdots \\
+P_n
+\end{array}
+\right)
+\end{equation}
+其中$P_i=\{p_{i,j}|\forall j\in [1,m],<i,j,r_{i,j},\bar{r}_i>\notin R\},\forall i\in[1,n]$表示用户$i$对未评价物品集的所有预测分数。
+具体的Map与Reduce算法如下：
+\begin{description}
+\item[Map-IV:] 将$i$相同的$B=<i,j,r_{i,j},\bar{r}_i ,S_i>$映射到同一个机器中，简记为$<j,r_{i,j},\bar{r}_i ,S_i>$，同时将Map-I生成的$U_{all}$中的$U_i$映射到同一个机器中。对于$k$个机器，本步骤的复杂度为$o(\frac{nm}{k})$。将
+\item[Reduce-IV:] 取出$P=<i,j,p_{i,j},>$，保存到HDFS中。本步骤的复杂度为$o(\frac{m^2n}{k})$。
+\end{description}
+至此所有用户对未评价物品集的分数$p_{i,j}$都已经计算出来。
+即构建了完整的User-Item矩阵，也即用户兴趣模型。
+此时对于每个用户，对所有物品按评价分数大小排序，排名前k的物品组成一个向量。
+下一步可以根据这个向量推荐用户内容。
+
+
+
+
+
+
