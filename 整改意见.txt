@@ -1,0 +1,13 @@
+题目：GF(q)上的LDPC分组码和LDPC卷积码的比较
+q-ary LDPC
+中文摘要：本文介绍了 GF(q) 上 的LDPC 分组码相似的LDPC卷 积码
+，其中
+关键词新一行
+英文摘要：q-ary LDPC
+keyword 头字母大写 新一行
+引用 会议论文
+R. Gallager.的估计有问题
+
+表 前两个表1页 填上学院 后两个表也填
+
+改中期表 抱怨不能用latex

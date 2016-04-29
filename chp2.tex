@@ -1,9 +1,10 @@
 \chapter{相关算法及Hadoop分布式数据处理}
-本文提出的推荐系统基于语义分析、%低阶矩阵分解、
-协同过滤算法、Hadoop和MapReduce等几个基本算法及基本概念。
+本文提出的推荐系统基于语义分析、协同过滤算法、Hadoop和MapReduce等几个基本算法及基本概念。
 以下简单介绍这几个算法及概念。
+
 \section{语义分析}
-自然语言分析包含以下主要步骤：
+为了从用户上网流量记录中分析用户的兴趣爱好，我们需要通过语义分析的方法对用户曾经浏览过的网页进行标记和分类。
+语义分析包含以下主要步骤：
 \begin{enumerate}
 	\item 句尾检测
 
@@ -33,32 +34,26 @@
 	这一步主要是进一步为分好的块标记名称或者类型，这与第三步词义类型标记不同，因为这一步以块为整体标记名称或者类型。
 \end{enumerate}
 
-其中每一步都很关键，因为一旦其中一步出错，误差会逐步传播，使得语义分析出严重错误。下面我们介绍计算自然语言分析准确度的方法。在语义分析完成后，统计以下数量：
+其中每一步都很关键，因为一旦其中一步出错，误差会逐步传播，使得语义分析出严重错误。语义分析可以用经典的F1 score来计算其准确程度。下面简单介绍计算F1 score方法。在语义分析完成后，统计以下数量：
 \begin{center}
-\begin{description}
-	\item[TP]
-	被正确识别为实体的词语
-	\item[FP]
-	本来不应该被正确识别为实体的但确实被正确识别为实体的词语
-	\item[TN]
-	本来不应该被正确识别为实体的，同时没有被正确识别为实体的词语
-	\item[FN]
-	本来应该被正确识别为实体的，但没有被正确识别为实体的词语
-\end{description}
+\begin{itemize}
+	\item $TP$：被正确识别为实体的词语
+	\item $FP$：本来不应该被正确识别为实体的但确实被正确识别为实体的词语
+	\item $TN$：本来不应该被正确识别为实体的，同时没有被正确识别为实体的词语
+	\item $FN$：本来应该被正确识别为实体的，但没有被正确识别为实体的词语
+\end{itemize}
 \end{center}
-此时再定义精确度与召回率如下：
-\begin{center}
-\begin{description}
-	\item[精确度]
-	$precision= \frac{TP}{TP+FP} $
-	\item[召回率]
-	$recall= \frac{TP}{TP+FN} $
-\end{description}
-\end{center}
+此时再定义精确度$precision$与召回率$recall$如下：
+\begin{equation}
+precision= \frac{TP}{TP+FP}
+\end{equation}
+\begin{equation}
+recall= \frac{TP}{TP+FN}
+\end{equation}
 则可以用下式来描述语义分析模型的准确度为
-\[
+\begin{equation}
 F= 2* \frac{precision*recall}{precision+recall}
-\]
+\end{equation}
 \section{协同过滤算法}
 协同过滤算法基于三个假设：人们有共同的兴趣爱好；他们的兴趣爱好是稳定的；可以根据兴趣爱好的历史数据预测用户的选择。
 协同过滤算法主要比较用户之间的行为，找到最近的相邻用户，根据最近的相邻用户的行为预测用户的兴趣爱好。
@@ -68,21 +63,19 @@ F= 2* \frac{precision*recall}{precision+recall}
 最基本的协同过滤算法所研究的问题为：基于$R$，给每位用户推荐一个不包含该用户已经评价过物品的列表，其中的物品按照符合用户兴趣程度递减排序。
 
 协同过滤算法能分为主要两个步骤：第一步是计算用户$x$与用户$y$之间的相似程度：
-\[
+\begin{equation}
 S_{x,y} = \frac{\sum_{i\in I_{xy}}(r_{x,i}-\bar{r}_x)(r_{y,i}-\bar{r}_y)}{\sqrt{\sum_{i\in I_{xy}}(r_{x,i}-\bar{r}_x)^2}\sqrt{\sum_{i\in I_{xy}}(r_{y,i}-\bar{r}_y)^2}}
-\]
-其中$\r_{x,i}$为用户$x$对物品$i$的评分，$\bar{r}_x$是用户$x$的平均评分，$I_{xy}$为与用户$x$和用户$y$曾发生交互行为的物品集。
+\end{equation}
+其中$r_{x,i}$为用户$x$对物品$i$的评分，$\bar{r}_x$是用户$x$的平均评分，$I_{xy}$为与用户$x$和用户$y$曾发生交互行为的物品集。
 
 第二步计算用户$u$对物品$i$评分的预测值$r_{u,i}$：
-\[
+\begin{equation}
 r_{u,i} = \bar{r}_u + \frac{\sum_{u'\in U^k}(r_{u',i}-\bar{r}_{u'})S_{u,u'}}{\sum_{u'\in U^k}S_{u,u'}}
-\]
+\end{equation}
 其中$U^k$为与用户$u$距离最近的$n$个用户。
 最后，只需从物品集中筛选出预测分数前几的物品，推荐给用户$u$。
-\section{Hadoop和MapReduce}
-Google于03至06年公布了三篇论文，描述了GFS、BigTable、MapReduce三种技术以解决这些问题\parencite{Dean2004MapReduce,Ghemawat2003The,Chang2008Bigtable}。
-由于Google并没有公布算法细节，因此由雅虎牵头，在06年左右建立了开源项目Hadoop，目的是根据Google的三篇论文，实现一个大规模的管理计算系统。
 
+\section{Hadoop和MapReduce}
 Hadoop的基础组件是Hadoop分布式文件系统(HDFS)。
 HDFS的机制是将大量数据分布到计算机集群上，数据一次写入，但可以多次读取用于分析。
 Hadoop的主要执行框架即MapReduce。
@@ -139,8 +132,11 @@ Hadoop的主要执行框架即MapReduce。
 \draw[->] (Reducer2.east) -- (9,1);
 \end{tikzpicture}
 \figurecaption{Hadoop的MapReduce工作流程图}
+\label{fig:HadoopMapReduce}
 \end{center}
-MapReduce框架包含两个阶段，map阶段和reduce阶段。
+
+图\ref{fig:HadoopMapReduce}为Hadoop的MapReduce工作流程图。
+从该图中可以发现，MapReduce框架包含两个阶段，map阶段和reduce阶段。
 输入数据和计算后的输出数据都是一个(key,value)集合。
 用$<k,v>$来表示这些键值对。
 key主要用在reduce阶段，用来决定哪个value结合在一起。
@@ -149,6 +145,7 @@ key主要用在reduce阶段，用来决定哪个value结合在一起。
 \mathbf{Mapper} &:& <k1,v1> \rightarrow list<k2,v2> \\
 \mathbf{Reduce} &:& <k2,list<v2>> \rightarrow list<k3,v3>
 \end{eqnarray}
+
 计算过程从map阶段开始，其中并行执行map函数同时把保存在分布式文件系统的输入数据切分。
 进行每次切分就是指定一个map任务。
 每个map函数的输出键值对基于中间生成的键进行哈希分区。
