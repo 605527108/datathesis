@@ -1,7 +1,7 @@
 \chapter{用户上网数据采集与处理}
-本章主要介绍用户上网如何留下信息，如何将上网信息转变为推荐系统所需要的训练集。其中包括了以下内容：网络流量信息采集、打开URL后发生了什么、如何给原数据库中没有的url分类、如何格式化、存储。
+本章主要介绍用户上网如何留下信息，如何将用户上网信息转变为推荐系统所需要的训练集。其中包括了以下内容：网络信息通信协议及其结构、网页主要内容分布位置、网络流量信息采集、去除标签和过滤内容的策略、格式化、存储采集到信息的方法。
 
-\section{网络信息结构及内容}
+\section{网络信息通信协议及其结构}
 互联网用户通过各类软件发送、接受信息。对于不同的软件，有不同的信息发送、接受格式,称作协议。以大多数网络浏览器使用的基本HTTP协议来说，其请求的头部有以下常用的信息 \\
 \begin{center}
 \tablecaption{HTTP协议请求头部常用的信息}
@@ -21,17 +21,20 @@
 
 表\ref{table:HTTPinfo}简单介绍了HTTP协议请求头部中常用的信息。
 根据HTTP请求头部我们可以获得用户请求网站URL，请求时间，使用浏览器类型信息。
-当然对于纪录了所有网络流量包的情况，我们甚至可以解压信息包，获得网页信息。
+通过网站URL可以简单将网页分为几类：
+\begin{itemize}
+\item 综合网页类。一些门户网站的首页通常含有各种关键词，所属范围较大，与用户的兴趣爱好没有多少关系，比如搜狐首页、新浪首页；
+\item 搜索类网页。这些网页会包含一个或多个搜索关键词，并且这些关键词由用户输入，基本上能代表用户的兴趣爱好。例如在百度搜索等搜索引擎页面，通常会在其URL后接上搜索关键词的UTF-8编码；
+\item 终点页面。这类网页通常包含一个或多个关键词，接着会有大篇幅文字描述相关内容。
+\end{itemize}
+根据以上分类可以为信息采集分类系统设计第一层过滤分类规则。
+另外还能通过引用源的内容获取网页间的联系，经相互对比，增加网页信息抓取的准确度。
+
+\section{网络内容采集}
+仅通过分析网络请求与响应头部的信息，获取到的信息对于本系统来说远远不够。
+所以需要记录并保存所有网络流量包，然后解压信息包，获得其中网页信息。
 对于使用其他协议的软件来说，只要按照该协议的约定，也能正确解压信息包，获取其中内容。
 
-在处理大量网络流量信息之前，可以先用小型工具抓取网络包进行分析。
-Wireshark是一个跨平台的网络流量分析工具，他能识别与分析多种协议的网络包。
-当网卡处于Promiscuous模式时，Wireshark能监听其所在局域网的所有网络包。
-从Wireshark的GUI窗口可以简明地查看包信息，以及解压包获取其中内容。
-Wireshark还能设置强大的过滤条件，从而筛选出目标网络包。
-Wireshark多数用于个人用户，对于使用Linux的服务器而言，还能用Ipfilter完成上述任务。
-
-\section{网络流量信息采集与处理}
 \usetikzlibrary{backgrounds,calc,shadings,shapes.arrows,shapes.symbols,shadows}
 \definecolor{switch}{HTML}{006996}
 \makeatletter
@@ -358,13 +361,25 @@ Wireshark多数用于个人用户，对于使用Linux的服务器而言，还能
 \label{fig:userinfocap}
 \end{center}
 
-目前，国内外比较流行使用的网络流量信息采集方式有Cisco公司开发的NetFlow工具。
+在处理大量网络流量信息之前，可以先用小型工具抓取网络包进行分析。
+Wireshark是一个跨平台的网络流量分析工具，能用于识别与分析多种网络协议包。
+当网卡处于Promiscuous模式时，Wireshark能监听其所在局域网的所有网络包。
+从Wireshark的GUI窗口可以简明地查看包信息，以及解压包获取其中内容。
+Wireshark还能设置强大的过滤条件，从而筛选出目标网络包。
+Wireshark适用于Windows平台用户，对于使用Linux的用户而言，可以使用Iptables完成上述分析步骤。
+
+对于大型的路由器或交换网络的情况，如图\ref{fig:userinfocap}中的多层级网络，Wireshark和Iptables就不太适用。
+目前，国内外比较流行使用的大型网络流量信息采集方式有Cisco公司开发的NetFlow工具。
 支持NetFlow的路由器和交换机能够收集所有接口上IP交换数据，并且能把数据导出到NetFlow信息分析服务器上。
 国内研究人员也设计了类似的分布式网络流量分析系统\parencite{乔媛媛2014基于,延皓2011基于流量监测的网络用户行为分析,董超2013基于网络流量监测的移动互联网特征研究}。
 
 本文根据NetFlow采集模式设计采集及处理模块，如图\ref{fig:userinfocap}所示。
 对于每个地区的路由器或者交换机，都连接到信息分析服务器。
-信息分析服务器将过滤Content-Type不是HTML类型的文件，比如js和css文件，然后记录如下信息。
+信息分析服务器将对文件的Content-Type进行过滤。
+目前，包含有效信息的网络文件类型大部分为HTML，另外还有一部分内容通过JSON文件与XML文件传输。
+但是随着Javascript的极速发展，相当一部分HTML由浏览器从Javascript文件中生成，即网络内容不再是显式传输，而是隐藏在JSON文件与XML文件中，填充到Javascript生成的HTML框架中。
+这对本文的网页信息分析造成了一定的困难。
+经过简单的过滤，可以记录保存表\ref{table:infoformatone}中标定的信息。
 \begin{center}
 \tablecaption{信息分析服务器记录信息格式}
 \label{table:infoformatone}
@@ -375,15 +390,129 @@ Wireshark多数用于个人用户，对于使用Linux的服务器而言，还能
 \end{tabular}
 \end{center}
 
-对于表\ref{table:infoformatone}
-所记录的信息，本模块主要分析Request URL与HTML文件。
-由于URL包含网站名称，以及访问路径，故URL包含部分关键词。
-可将URL作为一个语句进行语义分析。
+\section{网络信息处理及分类}
+通过前两节的分析，混杂的网络信息已经归档为按表\ref{table:infoformatone}中格式的记录。
+为处理和分类这些有序信息，本节形成策略如图\ref{fig:classify}：
+\usetikzlibrary{%
+  arrows,%
+  shapes.misc,% wg. rounded rectangle
+  shapes.arrows,%
+  chains,%
+  matrix,%
+  positioning,% wg. " of "
+  scopes,%
+  decorations.pathmorphing,% /pgf/decoration/random steps | erste Graphik
+  shadows%
+}
+\tikzset{
+  nonterminal/.style={
+    % The shape:
+    rectangle,
+    % The size:
+    minimum size=6mm,
+    % The border:
+    very thick,
+    draw=red!50!black!50,         % 50% red and 50% black,
+                                  % and that mixed with 50% white
+    % The filling:
+    top color=white,              % a shading that is white at the top...
+    bottom color=red!50!black!20, % and something else at the bottom
+    % Font
+    font=\itshape
+  },
+  terminal/.style={
+    % The shape:
+    rounded rectangle,
+    minimum size=6mm,
+    % The rest
+    very thick,draw=black!50,
+    top color=white,bottom color=black!20,
+    font=\ttfamily},
+  skip loop/.style={to path={-- ++(0,#1) -| (\tikztotarget)}}
+}
+
+{
+  \tikzset{terminal/.append style={text height=1.5ex,text depth=.25ex}}
+  \tikzset{nonterminal/.append style={text height=1.5ex,text depth=.25ex}}
+}
+\begin{center}
+\begin{tikzpicture}[
+        point/.style={coordinate},>=stealth',thick,draw=black!50,
+        tip/.style={->,shorten >=0.007pt},every join/.style={rounded corners},
+        hv path/.style={to path={-| (\tikztotarget)}},
+        vh path/.style={to path={|- (\tikztotarget)}},
+        text height=1.5ex,text depth=.25ex % align text horizontally
+    ]
+    \scriptsize
+    \matrix[column sep=4mm] {
+        \node (p1) [point] {}; & \node (zhuabao) [nonterminal] {抓包};     &
+        \node (p2) [point] {}; & \node (html)    [terminal]    {HTML文件};        &
+        \node (p3) [point] {}; &                                              &
+        \node (p4) [point] {}; & \node (getridoftag) [nonterminal] {去除标签}; &
+        \node (p5) [point] {}; & \node (diyilei)   [terminal]    {综合网页};   &
+        \node (p6) [point] {}; & \node (yuyifenxi) [nonterminal] {语义分析}; &
+        \node (p7) [point] {}; \\
+        % Third row:
+        & & & \node (xml) [terminal] {XML文件}; & & &  & & & \node (dierlei) [terminal] {搜索网页}; & & & \\
+        & & & \node (javascript) [terminal] {Javascript}; & \node (p8) [point] {}; & \node (javascriptvm) [nonterminal] {Javascript模拟器}; &  & & & \node (disanlei) [terminal] {终点网页}; & & & \\
+        & & & \node (json)    [terminal]    {Json文件}; & & &  & & & & & & \\
+    };
+
+    { [start chain]
+        \chainin (p1);
+        \chainin (zhuabao)   [join=by tip];
+        \chainin (p2)    [join];
+        { [start branch=xml]
+        \chainin (xml) [join=by {vh path,tip}];
+        \chainin (p8)    [join=by {hv path}];
+        }
+        { [start branch=javascript]
+        \chainin (javascript) [join=by {vh path,tip}];
+        \chainin (p8)    [join];
+        }
+        { [start branch=json]
+        \chainin (json) [join=by {vh path,tip}];
+        \chainin (p8)    [join=by {hv path}];
+        \chainin (javascriptvm) [join=by tip];
+        \chainin (p4)    [join=by {hv path}];
+        }
+
+        \chainin (html)   [join=by tip];
+        \chainin (p3)    [join];
+        \chainin (p4)    [join];
+
+        \chainin (getridoftag) [join=by tip];
+        \chainin (p5)    [join];
+        { [start branch=dierlei]
+        \chainin (dierlei)  [join=by {vh path,tip}];
+        \chainin (p6)    [join=by {hv path,tip}];
+        }
+        { [start branch=disanlei]
+        \chainin (disanlei) [join=by {vh path,tip}];
+        \chainin (p6)    [join=by {hv path,tip}];
+        }
+        \chainin (diyilei)    [join=by tip];
+        \chainin (p6)     [join];
+        \chainin (yuyifenxi)    [join=by tip];
+        \chainin (p7)    [join=by tip];
+    }
+\end{tikzpicture}
+\normalsize
+\figurecaption{网页信息处理分类策略}
+\label{fig:classify}
+\end{center}
+该策略的主要描述如下：网页信息处理分类首先将表\ref{table:infoformatone}中的网络协议包解压，
+然后获得HTML文件，或者Javascript文件与XML文件、JSON文件。
+将后三者放入Javascript虚拟机中，可以生成HTML文件。
+接着按照HTML文件的请求URL或者标题内容进行分类，
+按前一节所描述的网页分类分为综合网页，搜索网页或者终点网页。
+由于URL包含网站名称，以及访问路径，故URL包含部分关键词，可将URL作为一个语句进行语义分析。
 另外，由于HTML文件结构可知，其中的内容镶嵌在各种HTML标签中。
 故分析HTML文件首先要去除各种标签。
 通过实现监督学习算法\parencite{Kohlsch2010Boilerplate}去除标签，将剩下的文字内容输入语义分析模块。
+最后，按网页类型做不同分析重点的语义分析。
 
-按照第二章第一节描述的语义分析原理，本模块首先分析得出所有关键词。
+按照第二章第一节描述的语义分析原理，本模块处理网页，分析得出所有关键词。
 从关键词中取出所有名词，并按照出现次数进行排序。
 将高频名词按照表\ref{table:infoformattwo}格式输出保存。
 \begin{center}
@@ -395,8 +524,9 @@ Wireshark多数用于个人用户，对于使用Linux的服务器而言，还能
 	\hline
 \end{tabular}
 \end{center}
-\section{基于大数据处理的推荐算法}
-根据Hadoop与MapReduce的原理及特点，我们可以将协同过滤算法计算过程分解到Map阶段与Reduce阶段中。
+
+\section{在Hadoop上实现基于用户历史的协同过滤算法}
+根据Hadoop与MapReduce的原理及特点，我们可以将基于用户历史的协同过滤算法计算过程分解到Map阶段与Reduce阶段中。
 
 首先要进行简单的计数工作，即计算每个User-Item对的数目。
 将该数目代入逻辑函数$S(t)=1/(1+e^{-t})$进行简单的归一化。
@@ -511,8 +641,90 @@ P_n
 此时对于每个用户，对所有物品按评价分数大小排序，排名前k的物品组成一个向量。
 下一步可以根据这个向量推荐用户内容。
 
+\section{在Hadoop上实现基于模型的协同过滤算法}
+在上一章中已经具体解释了，交替最小方差算法更适合于在Hadoop上实现的基于模型的协同过滤算法。
 
+对于交替最小方差算法，主要步骤是矩阵$R$与矩阵$M$和矩阵$U$之间的联合操作。
+通常来说，User-Item矩阵$R$要远远大于特征矩阵。
+但是，本文只考虑矩阵$M$和矩阵$U$都不需要切分，即矩阵$M$和矩阵$U$都能保存在单个运算节点的内存中，的情况下，实现具体算法。
 
+初步估计在并行计算的过程中，需要max$(|C|,|P|)\times r \times 8$个字节的内存量。
+对于1千万数量级的用户数或者物品数，特征数为100的情况，大概需要8GB的内存，就目前的计算机水平，这个条件很容易满足。
 
+基于以上设定，下面介绍交替最小方差算法的具体步骤。
+首先从用户数据集$U$或者物品数据集$M$中取相对小的一个，复制到集群的每个计算节点中。
+另外每个计算节点本地都有User-Item矩阵$R$的副本。
+然后，通过一个map运算，把矩阵$R$的副本和矩阵$M$结合起来（矩阵$R$的副本和矩阵$U$类似）。
+另外，在这个map运算中，我们还能从结合的结果实现中并行计算特征向量的逻辑，也就是说，我们可以在单独一个map运算中，运行一整套矩阵$U$和矩阵$M$的计算。
+\begin{center}
+\def\Machineone{
+  \draw[rounded corners=1ex,color=blue!20!,fill=blue!20!] (0,0) rectangle (3,3);
+  \draw[rounded corners=1ex,fill=white] (0.5,2) rectangle (2.5,2.5);
+  \draw[fill=gray] (0.5,0.5) rectangle (1.8,1.5);
+  \draw[fill=gray] (1,3.5) rectangle (2,4.5);
+  \draw[->] (1.15,1.5) -- (1.15,2);
+  \draw[->] (1.5,3) -- (1.5,3.5);
+  \node at (1.5,2.25) {\textbf{Map}};
+  \node at (1.15,1) [white] {$A(1)$};
+  \node at (1.55,4) [white] {$U(1)$};
+  \node at (1.5,-0.5) {Machine 1};
+}
+\def\Machinetwo{
+  \draw[rounded corners=1ex,color=blue!20!,fill=blue!20!] (0,0) rectangle (3,3);
+  \draw[rounded corners=1ex,fill=white] (0.5,2) rectangle (2.5,2.5);
+  \draw[fill=gray] (0.5,0.5) rectangle (1.8,1.5);
+  \draw[fill=gray] (1,3.5) rectangle (2,4.5);
+  \draw[->] (1.15,1.5) -- (1.15,2);
+  \draw[->] (1.5,3) -- (1.5,3.5);
+  \node at (1.5,2.25) {\textbf{Map}};
+  \node at (1.15,1) [white] {$A(2)$};
+  \node at (1.55,4) [white] {$U(2)$};
+  \node at (1.5,-0.5) {Machine 2};
+}
+\def\Machinethree{
+  \draw[rounded corners=1ex,color=blue!20!,fill=blue!20!] (0,0) rectangle (3,3);
+  \draw[rounded corners=1ex,fill=white] (0.5,2) rectangle (2.5,2.5);
+  \draw[fill=gray] (0.5,0.5) rectangle (1.8,1.5);
+  \draw[fill=gray] (1,3.5) rectangle (2,4.5);
+  \draw[->] (1.15,1.5) -- (1.15,2);
+  \draw[->] (1.5,3) -- (1.5,3.5);
+  \node at (1.5,2.25) {\textbf{Map}};
+  \node at (1.15,1) [white] {$A(3)$};
+  \node at (1.55,4) [white] {$U(3)$};
+  \node at (1.5,-0.5) {Machine 3};
+}
+
+\begin{tikzpicture}
+\Machineone
+\begin{scope}[xshift=3.5cm]
+\Machinetwo
+\end{scope}
+\begin{scope}[xshift=7cm]
+\Machinethree
+\end{scope}
+\draw[fill=gray] (3.5,-2) rectangle (6.5,-1.5);
+\draw[->] (5.7,-1.5) -- (5.7,2);
+\draw[-] (2.2,-0.2) -- (9.2,-0.2);
+\draw[->] (2.2,-0.2) -- (2.2,2);
+\draw[->] (9.2,-0.2) -- (9.2,2);
+\node at (5,-1.75) [white] {$M$};
+\end{tikzpicture}
+\figurecaption{基于模型的协同过滤算法MapReduce实现}
+\label{fig:CFMap}
+\end{center}
+图\ref{fig:CFMap}描述了在三个计算节点上计算矩阵$U$时的并行结合方法。
+我们将矩阵$M$分发到每个计算节点中，然后计算节点会给矩阵$M$的特征向量创建一个哈希表。
+保存在HDFS中的矩阵$R$按行分块储存，并作为map运算的输入。
+$R(1)$代表矩阵$R$的第一个分块。
+接着，map运算读入矩阵$R$其中一行$r_i$然后选择其中部位零的下标，按照这些下标从哈希表找到矩阵$M$中对应的$m_j$。
+然后，map运算将解一个线性方程，这个线性方程由交互信息$r_i$和物品特征向量$m_j$构成。
+在得到方程解后，将结果写入HDFS中。
+对于矩阵$M$的计算，其计算步骤类似，唯一的不同点在于，要在每个运算节点分发矩阵$U$，以及按照列来对矩阵$R$进行分块储存。
+
+以上的计算方法只使用了map运算，因为相对于map运算与reduce运算一起使用，单独使用map运算在时间安排上更加灵活。
+另外，我们还避免使用耗时很长的混排阶段，因为在混排阶段，大量数据要通过速率不太高的网络进行传输。
+由于我们能够在一次map运算中运行矩阵结合以及计算的步骤，所以矩阵结合的结果就没必要写到HDFS中。
+在计算线性方程的初始化阶段，我们通过Hadoop的分布式缓存分发特征矩阵。
+另外，我们将Hadoop设置为在工作节点上重用虚拟机，并把特征向量矩阵缓存在内存中以避免接下来的map函数要重新读取数据。
 
 
