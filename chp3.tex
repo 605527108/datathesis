@@ -550,7 +550,7 @@ Wireshark适用于Windows平台用户，对于使用Linux的用户而言，可�
 \end{itemize}
 
 \subsection{计算用户间相似度}
-计算用户间相似度矩阵$S={S_{i,j}|\forall i,j\in[1,n]}$。
+计算用户间相似度矩阵$S=\{S_{i,j}|\forall i,j\in[1,n]\}$。
 定义$U_i = \{<i,j,r_{i,j},\bar{r}_i>|\forall j \in [1,m],<i,j,r_{i,j},\bar{r}_i>\in R\}$为用户$i$评价过的物品集。
 定义$N_{k,l} = U_k \cap U_l$，为用户$k$与用户$l$共同评价过的物品集。
 为了计算可行性，$N_{k,l}$将分到同一个节点上。具体的Map与Reduce算法如下：
