@@ -43,10 +43,10 @@
 其中每一步都很关键，因为一旦其中一步出错，误差会逐步传播，使得语义分析出严重错误。语义分析可以用经典的F1 score来计算其准确程度。下面简单介绍计算F1 score方法。在语义分析完成后，统计以下数量：
 \begin{center}
 \begin{itemize}
-	\item $TP$：被正确识别为实体的词语
-	\item $FP$：本来不应该被正确识别为实体的但确实被正确识别为实体的词语
-	\item $TN$：本来不应该被正确识别为实体的，同时没有被正确识别为实体的词语
-	\item $FN$：本来应该被正确识别为实体的，但没有被正确识别为实体的词语
+	\item $TP$：被正确识别为实体的词语；
+	\item $FP$：本来不应该被正确识别为实体的但确实被正确识别为实体的词语；
+	\item $TN$：本来不应该被正确识别为实体的，同时没有被正确识别为实体的词语；
+	\item $FN$：本来应该被正确识别为实体的，但没有被正确识别为实体的词语。
 \end{itemize}
 \end{center}
 此时再定义精确度$precision$与召回率$recall$如下：
@@ -184,12 +184,14 @@ Hadoop会基于地点计划分配MapReduce运算，同时提高集群整体的�
 \begin{equation}
 S_{x,y} = \frac{\sum_{i\in I_{xy}}(r_{x,i}-\bar{r}_x)(r_{y,i}-\bar{r}_y)}{\sqrt{\sum_{i\in I_{xy}}(r_{x,i}-\bar{r}_x)^2}\sqrt{\sum_{i\in I_{xy}}(r_{y,i}-\bar{r}_y)^2}}
 \end{equation}
+
 其中$r_{x,i}$为用户$x$对物品$i$的评分，$\bar{r}_x$是用户$x$的平均评分，$I_{xy}$为与用户$x$和用户$y$曾发生交互行为的物品集。
 
 第二步计算用户$u$对物品$i$评分的预测值$r_{u,i}$：
 \begin{equation}
 r_{u,i} = \bar{r}_u + \frac{\sum_{u'\in U^k}(r_{u',i}-\bar{r}_{u'})S_{u,u'}}{\sum_{u'\in U^k}S_{u,u'}}
 \end{equation}
+
 其中$U^k$为与用户$u$距离最近的$n$个用户。
 最后，只需从物品集中筛选出预测分数前几的物品，推荐给用户$u$。
 以上被称作基于用户的协同过滤算法，其中从以下几个方面，可以看出它是从用户的角度来工作的：
@@ -222,6 +224,7 @@ r_{u,i} = \bar{r}_u + \frac{\sum_{u'\in U^k}(r_{u',i}-\bar{r}_{u'})S_{u,u'}}{\su
 \begin{equation}
 f(p_i,q_j)\rightarrow R_{i,j},i=1,2,\dots M, j=1,2,\dots N
 \end{equation}
+
 其中$p_i$和$q_j$代表用户$i$和物品$j$的一对模型参数，$f$是把模型参数映射到已知的User-Item矩阵数据的一个模型参数。
 所以基于模型的协同过滤算法的主要任务就是在模型函数$f$下，通过已知的User-Item矩阵数据$R_{i,j}$，预测参数$p_i$和$q_j$。
 
@@ -245,6 +248,7 @@ $r\times |P|$的矩阵$M$代表物品集的潜在因子，即$R$的列向量。
 \begin{equation}
 U^*,M^* = \mathop{\argmax}_{U,M} \{\frac{1}{2} \sum_{i=1}^C \sum_{j=1}^P I_{i,j}(r_{i,j}-u_i^{\tau} m_j)^2 + \frac{\lambda_U}{2}\lVert U\rVert_F^2 +\frac{\lambda_M}{2}\lVert M\rVert_F^2\}
 \end{equation}
+
 其中$U^*$和$M^*$代表最小化运算后的最优解，$I_{i,j}$代表示性函数，即当其自变量大于零，函数值为一。
 
 另外一种计算方法称为交替最小方差算法。

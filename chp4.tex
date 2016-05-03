@@ -219,6 +219,7 @@ recall= \frac{|PredictionSet\cap ReferenceSet|}{|ReferenceSet|}
 \begin{equation}
 F= 2* \frac{precision*recall}{precision+recall}
 \end{equation}
+
 表\ref{table:performance}展示了协同过滤推荐系统在四个数据集中的F1分数。
 其中F1分数稳定在0.07的范围，表明协同过滤推荐系统在F1分数这种评价标准中表现并不太好。
 造成这个结果的主要原因是，F1分数比较适用于评价二分类问题。
@@ -278,6 +279,7 @@ Yahoo! C15 & 6.0GB & 0.0713 \\ \hline
 \begin{equation}
 S_p = \frac{T_1}{T_p}
 \end{equation}
+
 其中$S_p$代表并行计算加速倍数，$T_1$代表仅使用1个运算节点处理目标数据集所用时间，$T_p$代表使用$p$个运算节点处理目标数据集所用时间。
 下面我们从MovieLens数据集中随机选取某固定大小的子集进行$S_p$的计算。
 \begin{center}
