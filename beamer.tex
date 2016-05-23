@@ -1,5 +1,7 @@
 \documentclass{beamer}
 \usepackage{ctex}
+\usepackage{tikz}
+\usepackage{pgfplots}
 \usepackage{beamerthemesplit}
 \title{基于互联网日志的用户行为分析算法和用户模型的研究}
 \author{孙卓豪}
@@ -7,7 +9,8 @@
 \date{\today}
 
 \begin{document}
-
+\usetikzlibrary{shapes,snakes}
+\usetikzlibrary{arrows, decorations.markings}
 %%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 	\titlepage
@@ -15,30 +18,210 @@
 %%%%%%%%%%%%%%%%%%%%%%
 
 %%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
+\begin{frame}[shrink]
 	\tableofcontents
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%
 
-\section{题解}
+\section{主要工作及相关内容解释}
+\subsection{主要工作}
 %%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-	\frametitle{题解}
+\frametitle{主要工作及相关内容解释}
+	\begin{block}{主要工作}
+	本文的主要工作有：
 	\begin{itemize}
-		\item 基于互联网日志，即数据的来源是网络运营商路由器或者交换机流量记录，以及大型互联网公司服务器访问记录
-		\item 用户行为和用户模型，表现为协同过滤算法中的User-Item矩阵
+		\item 使用Hadoop和MapReduce分析、处理大数据；
+		\item 实现分布式协同过滤推荐系统；
+		\item 通过用户兴趣矩阵构建用户模型。
 	\end{itemize}
-	综上，本文的主要工作是从路由器、交换机或者服务器采集基础数据，经过预处理后，用协同过滤算法获得User-Item矩阵，再根据User-Item矩阵进行预测用户行为或者推荐物品。最后将本文工作整合起来设计一个推荐系统。
+	\end{block}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%
 
-\section{各模块分别介绍}
-\subsection{基础数据采集}
+\subsection{互联网日志的特点}
 %%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-	\frametitle{各模块分别介绍}
-		\begin{block}{基础数据采集}
-		本模块主要工作是从网络运营商路由器或者交换机流量记录，以及大型互联网公司服务器访问记录中截取有用的用户行为信息：用户的ID，请求的URL，请求时间，请求地点，使用设备类型，服务器返回内容等。
+	\frametitle{主要工作及相关内容解释}
+	\begin{block}{互联网日志的特点}
+	随着互联网的高速发展，网络用户留下越来越多的网络行为信息。
+
+	互联网日志是保存于各种网络设备，如路由器、交换机或者服务器中用户使用网络服务的历史记录。
+	互联网日志的特点：
+	\begin{itemize}
+		\item 数量巨大，分布范围广；
+		\item 具有时效性；
+		\item 隐含信息丰富。
+	\end{itemize}
+	从以上特点可以看出，我们可以从互联网日志中分析用户行为信息。而要处理大量的、分布的互联网日志，则需要使用Hadoop与MapReduce分布式计算平台。
+	\end{block}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{用户爱好的模型及其表现形式}
+%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{主要工作及相关内容解释}
+	\begin{block}{用户爱好的模型及其表现形式}
+	用户的某次网络行为通常与几个事件或者物品相关联，我们可以将这些事件或者物品转换为关键词的形式，然后构建以下User-Item矩阵，该矩阵记录用户与关键词的交互信息。
+	\begin{center}
+		\begin{tabular}{@{} c @{}|@{} c @{}|@{} c @{}|@{} c @{}|@{} c @{}|@{} c @{}}
+			\hline
+			 & Item 1 & Item 2 & Item 3 \\
+			\hline
+			User 1 & ? & 0.8 & 0.9 \\
+			\hline
+			User 2 & 0.1 & 0.6 & ? \\
+			\hline
+			User 3 & 0.2 & ? & 0.3 \\
+			\hline
+		\end{tabular}
+		\end{center}
+	\end{block}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%
+
+\section{系统整体介绍}
+%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+	\frametitle{系统整体介绍}
+\tikzstyle{vecArrow} = [thick, decoration={markings,mark=at position
+   1 with {\arrow[semithick]{open triangle 60}}},
+   double distance=1.4pt, shorten >= 5.5pt,
+   preaction = {decorate},
+   postaction = {draw,line width=1.4pt, white,shorten >= 4.5pt}]
+
+% Define box and box title style
+\tikzstyle{mybox} = [draw=black, fill=white, very thick,
+    rectangle, rounded corners, inner sep=10pt, inner ysep=20pt]
+\tikzstyle{fancytitle} =[fill=red, text=white]
+
+\def\html{
+    \draw[rounded corners=0.1ex,fill=white,thick] (0.2,0.2) rectangle (0.9,1.2);
+    \draw[rounded corners=0.1ex,fill=white,thick] (0.1,0.1) rectangle (0.8,1.1);
+    \draw[rounded corners=0.1ex,fill=white,thick] (0,0) rectangle (0.7,1);
+    \node at (0.35,0.2) {\tiny HTML};
+}
+\begin{center}
+\begin{tikzpicture}
+\node [mybox] (stepone){
+	\begin{minipage}{0.40\textwidth}
+		\tiny
+        \begin{center}
+		\begin{tabular}{@{} c @{}|@{} c @{}|@{} c @{}|@{} c @{}|@{} c @{}|@{} c @{}}
+			\hline
+			User ID & Request URL & Time & Location & Content & Device \\
+			\hline
+			1 & www.$\ldots$/bbb & 20:10 & hill & $\ldots$ & iPhone \\
+			\hline
+			2 & www.$\ldots$/aab & 23:20 & base & $\ldots$ & iPhone \\
+			\hline
+			3 & www.$\ldots$/cdd & 24:10 & grid & $\ldots$ & iPhone \\
+			\hline
+		\end{tabular}
+		\end{center}
+	\end{minipage}
+};
+\begin{scope}[xshift=50,yshift=20]
+\html
+\end{scope}
+\draw [->] (1.5,-0.2) -- (2,0.7);
+\node[fancytitle, right=10pt] at (stepone.north west) {网络流量信息采集};
+
+\node[mybox, right=10pt] at (stepone.east) (steptwo){
+	\begin{minipage}{0.40\textwidth}
+		\tiny
+        \begin{flushright}
+		\begin{tabular}{@{} c @{}|@{} c @{}|@{} c @{}|@{} c @{}|@{} c @{}|@{} c @{}}
+			\hline
+			User ID & Request URL & Item \\
+			\hline
+			1 & www.$\ldots$/bbb & cat \\
+			\hline
+			2 & www.$\ldots$/aab & car \\
+			\hline
+			3 & www.$\ldots$/cdd & pig \\
+			\hline
+		\end{tabular}
+		\end{flushright}
+	\end{minipage}
+};
+\begin{scope}[xshift=85,yshift=-25]
+\html
+\end{scope}
+\node[fancytitle, right=10pt] at (steptwo.north west) {语义分析及内容分类};
+
+\draw [->] (3.85,-0.1) -- (4.5,0.1);
+\draw [->] (3.75,-0.4) -- (4.5,-0.4);
+\draw [->] (3.65,-0.7) -- (4.5,-1);
+\node [draw] at (4.8,0.1) {\footnotesize cat};
+\node [draw] at (4.8,-0.4) {\footnotesize car};
+\node [draw] at (4.8,-1) {\footnotesize pig};
+
+\node[mybox, below=10pt] at (stepone.south) (stepfour){
+	\begin{minipage}{0.40\textwidth}
+		\tiny
+        \begin{center}
+		\begin{tabular}{@{} c @{}|@{} c @{}|@{} c @{}|@{} c @{}|@{} c @{}|@{} c @{}}
+			\hline
+			 & Item 1 & Item 2 & Item 3 \\
+			\hline
+			User 1 & \textbf{0.7} & 0.8 & 0.9 \\
+			\hline
+			User 2 & 0.1 & 0.6 & \textbf{0.5} \\
+			\hline
+			User 3 & 0.2 & \textbf{0.4} & 0.3 \\
+			\hline
+		\end{tabular}
+		\end{center}
+	\end{minipage}	
+};
+
+\node[mybox, below=10pt] at (steptwo.south) (stepthree){
+	\begin{minipage}{0.40\textwidth}
+		\tiny
+        \begin{center}
+		\begin{tabular}{@{} c @{}|@{} c @{}|@{} c @{}|@{} c @{}|@{} c @{}|@{} c @{}}
+			\hline
+			 & Item 1 & Item 2 & Item 3 \\
+			\hline
+			User 1 & ? & 0.8 & 0.9 \\
+			\hline
+			User 2 & 0.1 & 0.6 & ? \\
+			\hline
+			User 3 & 0.2 & ? & 0.3 \\
+			\hline
+		\end{tabular}
+		\end{center}
+	\end{minipage}
+};
+\node[fancytitle, right=10pt] at (stepfour.north west) {协同过滤预测};
+\node[fancytitle, right=10pt] at (stepthree.north west) {数据格式预处理};
+
+\draw[vecArrow] (stepone) to (steptwo);
+\draw[vecArrow] (steptwo) to (stepthree);
+\draw[vecArrow] (stepthree) to (stepfour);
+\end{tikzpicture}
+\end{center}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{主要模块介绍}
+\subsection{用户数据采集及处理}
+%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+	\frametitle{主要模块介绍}
+		\begin{block}{用户数据采集及处理}
+		本模块主要工作是从网络运营商路由器或者交换机流量记录，以及大型互联网公司服务器访问记录中采集用户行为信息，并按以下格式保存在分布式系统中。
+		\begin{center}
+		\begin{tabular}{c|c|c|c|c|c}
+	\hline
+	User ID & Request URL & Time & Location & Content & Device \\
+	\hline
+\end{tabular}
+\end{center}
+其中Content代表HTML等网络文件。
 		\end{block}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%
@@ -46,68 +229,181 @@
 \subsection{数据预处理}
 %%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-	\frametitle{各模块分别介绍}
+	\frametitle{主要模块介绍}
 		\begin{block}{数据预处理}
-		本模块主要工作是对上一模块收集到数据中“服务器返回内容”进行语义分析。语义分析得出的关键词与已有的关键词列表对比，更新关键词列表，同时生成用户兴趣信息：用户的ID，用户感兴趣的内容，行为时间，行为地点，使用设备类型。再将用户兴趣信息输入分布式系统，已初步构建User-Item矩阵。
+		本模块主要工作是对上一模块收集到数据中HTML等网络文件进行语义分析。语义分析得出的关键词与已有的关键词列表对比，更新关键词列表，同时生成用户兴趣信息：
+		\begin{center}
+\begin{tabular}{c|c|c|c|c|c}
+	\hline
+	User ID & Item & Time & Request URL & Location & Device \\
+	\hline
+\end{tabular}
+\end{center}
+		再将以上格式的信息保存于分布式系统，并初步构建User-Item矩阵。
 		\end{block}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{主成分分析}
+\subsection{基于用户历史的协同过滤算法}
 %%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-	\frametitle{各模块分别介绍}
-		\begin{block}{主成分分析}
-		由于用户数目巨大及用户感兴趣方面较多，上一模块User-Item矩阵维数高而且稀疏，本模块主要工作是对矩阵进行降维，减小后一模块计算复杂度。降维主要使用主成分分析算法，通过合并类似的维度减小矩阵的维度。
+	\frametitle{主要模块介绍}
+		\begin{block}{基于用户历史的协同过滤算法}
+		计算用户$x$与用户$y$之间的相似程度：
+\begin{equation*}
+S_{x,y} = \frac{\sum_{i\in I_{xy}}(r_{x,i}-\bar{r}_x)(r_{y,i}-\bar{r}_y)}{\sqrt{\sum_{i\in I_{xy}}(r_{x,i}-\bar{r}_x)^2}\sqrt{\sum_{i\in I_{xy}}(r_{y,i}-\bar{r}_y)^2}}
+\end{equation*}
+计算用户$u$对物品$i$评分的预测值$r_{u,i}$：
+\begin{equation*}
+r_{u,i} = \bar{r}_u + \frac{\sum_{u'\in U^k}(r_{u',i}-\bar{r}_{u'})S_{u,u'}}{\sum_{u'\in U^k}S_{u,u'}}
+\end{equation*}
 		\end{block}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%
 
-\subsection{基于Hadoop的协同过滤算法}
+
+\subsection{基于模型的协同过滤算法}
 %%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-	\frametitle{各模块分别介绍}
-		\begin{block}{基于Hadoop的协同过滤算法}
-		对上一模块生成的User-Item矩阵使用基于Hadoop的协同过滤算法。此时User-Item矩阵中每个用户对每种物品的喜好程度都已知，只需对每个用户对每种物品的喜好程度排序，则可以获得对每个用户推荐的物品列表。至此用户兴趣分析已完成。
+	\frametitle{主要模块介绍}
+		\begin{block}{基于模型的协同过滤算法}
+		$R$为$|C|\times|P|$的User-Item矩阵，其中包含了用户与物品间交互的历史信息。
+		首先把$R$渐近地分解为两个秩为$r$的特征矩阵$U$和$M$，使得$R\approx UM$。
+$|C|\times r$的矩阵$U$代表用户集的潜在因子，即$R$的行向量。
+$r\times |P|$的矩阵$M$代表物品集的潜在因子，即$R$的列向量。
+而用户和物品之间的交互强度的预测值可以在低维的矩阵空间中进行，即$u_i^\tau m_j$，其中$u_i$是代表用户$i$的向量，$m_j$是代表物品$j$的向量。
 		\end{block}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%
 
-
-\section{系统整体介绍及实例分析}
+\section{真实数据测试及性能分析}
+\subsection{测试环境}
 %%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-	\frametitle{系统整体介绍及实例分析}
-		这一部分主要是在实际环境中采集数据，切分训练集与验证集。用训练集数据输入各模块运行算法，获得User-Item矩阵。将结果与验证集比较，判断推荐系统准确程度。同时可以调节推荐系统各参数及各模块间协作方式以获得推荐系统最佳运行配置。
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%
-
-\section{已完成工作、未来计划及目前未解决问题}
-\subsection{已完成工作与未来计划}
-%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-	\frametitle{已完成工作、未来计划及目前未解决问题}
-		\begin{block}{已完成工作与未来计划}
-		目前已完成资料查找工作，已完成25\%的写作工作，即已完成各模块分别介绍中的数据预处理部分。
-
-		计划在中期检查前完成各模块分别介绍，中期检查后完成系统整体介绍及实例分析。
-		\end{block}
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-\subsection{目前未解决问题}
-%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-	\frametitle{已完成工作、未来计划及目前未解决问题}
-		\begin{block}{目前未解决问题}
-			\begin{itemize}
-				\item 原本计划申请雅虎某10TB的数据，结果申请后雅虎客服未回复。即目前未找到大量数据进行模拟
-				\item 如果使用亚马逊云服务，集群每个机器安运行小时收费，小时费率从0.011USD/小时到0.27USD/小时不等。数据存储服务单独计费，如在S3中存储10TB数据，每月需要支付668USD。价格十分昂贵。其他云服务公司价格类似
-				\item 若购买硬件，自行配置2～3台服务器的集群，价格也不便宜，同时安装配置过程比较麻烦
-			\end{itemize}
-			所以现在不知道应该如何进行实例分析。
+	\frametitle{真实数据测试及性能分析}
+		\begin{block}{测试环境}
+		测试环境包括4台安装了64位Ubuntu14.04以及Hadoop2.6.4的服务器，每台服务器配置为：
+		\begin{itemize}
+		\item 包含2个Intel的Xeon的CPU，型号为E5-2630，核心频率2.30GHz；
+		\item 2GB内存；
+		\item 40GB硬盘空间。
+	\end{itemize}
+		其中一台服务器作为Master，另外三台服务器作为Slave。
 		\end{block}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%
 
+\subsection{测试数据}
+%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+	\frametitle{真实数据测试及性能分析}
+		\begin{block}{测试数据}
+		由于测试数据的限制，本文无法对系统整体测试，只能按照各模块的功能进行测试。
+		在协同过滤预测步骤中，采用了4个不同的数据集，分别是：
+		\begin{itemize}
+		\item MovieLens的144MB的数据集，其中包含用户对电影的评分数据；
+		\item 2015年阿里移动推荐算法比赛的129MB的数据集，其中包含淘宝用户与线上商品的交互信息；
+		\item 雅虎音乐1.5GB的C15和R2数据集，其中包含用户对音乐、歌手、专辑的评分。
+	\end{itemize}
+	\end{block}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{基于历史的协同过滤算法测试结果}
+%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[shrink]
+	\frametitle{真实数据测试及性能分析}
+		\begin{block}{基于历史的协同过滤算法测试结果}
+		\begin{center}
+\begin{tabular}{c|c|c}
+ \hline
+数据集 & 训练集大小 & F1 score \\ \hline
+MovieLens & 576MB & 0.0823 \\ \hline
+Aliyun contest & 516 & 0.0644 \\ \hline
+Yahoo! R2 & 6.4GB & 0.0876 \\ \hline
+Yahoo! C15 & 6.0GB & 0.0713 \\ \hline
+\end{tabular}
+\end{center}
+\begin{equation*}
+precision= \frac{|PredictionSet\cap ReferenceSet|}{|PredictionSet|}
+\end{equation*}
+\begin{equation*}
+recall= \frac{|PredictionSet\cap ReferenceSet|}{|ReferenceSet|}
+\end{equation*}
+\begin{equation*}
+F= 2* \frac{precision*recall}{precision+recall}
+\end{equation*}
+	\end{block}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{基于模型的协同过滤算法测试结果}
+%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[shrink]
+	\frametitle{真实数据测试及性能分析}
+		\begin{block}{基于模型的协同过滤算法测试结果}
+		\pgfplotsset{compat=1.13}
+\begin{center}
+\begin{tikzpicture}
+\begin{axis}[
+    ybar,
+    enlargelimits=0.15,
+    legend style={at={(0.5,-0.2)},
+      anchor=north,legend columns=-1},
+    ylabel={每个map阶段平均运行时间(s)},
+    xlabel={特征空间维数$r$},
+    symbolic x coords={U10,M10,U20,M20,U50,M50,U100,M100},
+    xtick=data,
+    nodes near coords,
+    nodes near coords align={vertical},
+    x tick label style={rotate=45,anchor=east},
+    ]
+    \addplot coordinates {(U10,42) (M10,43) (U20,41) (M20,42)
+         (U50,35)(M50,48) (U100,37)(M100,60)};
+    \addplot coordinates {(U10,46) (M10,52) (U20,44) (M20,59)
+         (U50,52)(M50,96) (U100,87)(M100,161)};
+	 \legend{MovieLens,Yahoo! C15}
+\end{axis}
+\end{tikzpicture}
+\end{center}
+	\end{block}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%
+
+\subsection{Hadoop节点并行性能测试结果}
+%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[shrink]
+	\frametitle{真实数据测试及性能分析}
+		\begin{block}{Hadoop节点并行性能测试结果}
+		\begin{center}
+\pgfplotsset{compat=1.13}
+\begin{tikzpicture} 
+\begin{axis}[
+	title={$S_p=T_1/T_p$},
+    ylabel={$S_p$},
+    xlabel={计算节点数},
+    grid=major,
+    legend style={
+    	font=\tiny,
+	    cells={anchor=west},
+        legend pos=north west,
+    },
+    xmin=0,
+    ymin=0,
+]
+\addplot table {data_d1.dat};
+\addplot table {data_d2.dat};
+\addplot table {data_d3.dat};
+\addplot table {data_d4.dat};
+\legend{10KB datasize,
+100KB datasize,
+1MB datasize,
+10MB datasize,
+}
+\end{axis}
+\end{tikzpicture}
+\end{center}
+	\end{block}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%
 \end{document}

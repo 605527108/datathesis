@@ -522,7 +522,7 @@ Wireshark适用于Windows平台用户，对于使用Linux的用户而言，可�
 \label{table:infoformattwo}
 \begin{tabular}{c|c|c|c|c|c}
 	\hline
-	User ID & Request URL & Time & Location & Item & Device \\
+	User ID & Item & Time & Request URL & Location & Device \\
 	\hline
 \end{tabular}
 \end{center}
@@ -636,7 +636,7 @@ P_n
 具体的Map与Reduce算法如下：
 \begin{itemize}
 \item Map-IV：将$i$相同的$B=<i,j,r_{i,j},\bar{r}_i ,S_i>$映射到同一个机器中，简记为$<j,r_{i,j},\bar{r}_i ,S_i>$，同时将Map-I生成的$U_{all}$中的$U_i$映射到同一个机器中。对于$k$个机器，本步骤的复杂度为$o(\frac{nm}{k})$。将
-\item Reduce-IV：取出$P=<i,j,p_{i,j},>$，保存到HDFS中。本步骤的复杂度为$o(\frac{m^2n}{k})$。
+\item Reduce-IV：取出$P=<i,j,p_{i,j}>$，保存到HDFS中。本步骤的复杂度为$o(\frac{m^2n}{k})$。
 \end{itemize}
 至此所有用户对未评价物品集的分数$p_{i,j}$都已经计算出来。
 即构建了完整的User-Item矩阵，也即用户兴趣模型。
