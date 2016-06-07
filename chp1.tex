@@ -1,23 +1,24 @@
-\chapter{背景及研究现状}
+\chapter{绪论}
 
-\section{背景}
+\section{背景与意义}
 随着互联网的普及，人们每天花费越来越多时间通过网络工作，娱乐。目前，得益于芯片技术极速发展，比尔盖茨的目标，“地球上每个人都有个人电脑”，已基本实现，其中有40\%的电脑连接着互联网；全球大概30亿人持有计算能力相当于1980年房间般大小的超级计算机的智能手机，这些移动手机用户使用各地运营商大力推广的4G上网服务，实现随时随地上网的梦想。除了电脑和手机，人们还将可穿戴设备及各类物联网接入互联网中。因此，互联网各网络节点每天都能采集到大量用户的上网信息。基于这些用户信息，分析用户行为和研究用户模型，我们能挖掘出用户的兴趣爱好，由此推荐相关的内容，从而提高互联网的交互能力以及网络运营商内容运营能力。
 
-在多篇论文中，研究人员已经对用户行为进行了细致的研究。比如使用K-means距离算法\parencite{杨清龙2013基于网络日志的互联网用户行为分析}把行为类似的用户分为几组；又如研究上下文推断用户连续性爱好\parencite{史艳翠2013基于通信数据的上下文移动用户偏好动态获取方法研究};也有使用支持向量机给用户类型分类的\parencite{程辉2013网络用户偏好分析及话题趋势预测方法研究}；还有研究用户偏好随群体交流改变的\parencite{张欢2014网络用户偏好分析方法的研究,程辉2013网络用户偏好分析及话题趋势预测方法研究}。根据协同过滤算法\parencite{Resnick}，用户行为的建模可以描述为一个协同过滤中的User-Item矩阵。为了得到这个矩阵，本文要实现一个协同过滤的推荐系统。
+\section{研究现状}
+在多篇论文中，研究人员已经对用户行为进行了细致的研究。比如使用K-means距离算法\supercite{杨清龙2013基于网络日志的互联网用户行为分析}把行为类似的用户分为几组；又如研究上下文推断用户连续性爱好\supercite{史艳翠2013基于通信数据的上下文移动用户偏好动态获取方法研究};也有使用支持向量机给用户类型分类的\supercite{程辉2013网络用户偏好分析及话题趋势预测方法研究}；还有研究用户偏好随群体交流改变的\supercite{张欢2014网络用户偏好分析方法的研究,程辉2013网络用户偏好分析及话题趋势预测方法研究}。根据协同过滤算法\supercite{Resnick}，用户行为的建模可以描述为一个协同过滤中的User-Item矩阵。为了得到这个矩阵，本文要实现一个协同过滤的推荐系统。
 
 目前，大量互联网公司采用推荐系统给用户推荐相关的内容。
-全球最大网上购物平台Amazon最早将推荐系统引入网络销售领域\parencite{1167344}。
+全球最大网上购物平台Amazon最早将推荐系统引入网络销售领域\supercite{1167344}。
 之后，推荐系统被应用于各种类型的互联网服务中。
-比如影视服务方面，视频网站Netflix将推荐系统与A/B testing结合起来\parencite{Kondo2015The}。
-Google旗下的YouTube给用户推荐视频\parencite{Davidson2010The}。
+比如影视服务方面，视频网站Netflix将推荐系统与A/B testing结合起来\supercite{Kondo2015The}。
+Google旗下的YouTube给用户推荐视频\supercite{Davidson2010The}。
 
 目前推荐系统的主要使用协同过滤算法。有两种等效的协同过滤算法，一种是基于用户的协同过滤，另一种是基于物品的协同过滤。
-基于用户的协同过滤算法通过对相似用户的评分求和来预测用户对目标物品的评分\parencite{Resnick}。
-基于用户协同过滤算法是该类算法的最简形式\parencite{adomavicius2005toward}，它能推广到其他复杂模型，比如引入细颗粒度的邻近权重因子\parencite{herlocker2000explaining}，迭代寻找邻近方法\parencite{Zhang2007A}，或者基于用户的个人资料计算用户相似度\parencite{shi2009exploiting}。
+基于用户的协同过滤算法通过对相似用户的评分求和来预测用户对目标物品的评分\supercite{Resnick}。
+基于用户协同过滤算法是该类算法的最简形式\supercite{adomavicius2005toward}，它能推广到其他复杂模型，比如引入细颗粒度的邻近权重因子\supercite{herlocker2000explaining}，迭代寻找邻近方法\supercite{Zhang2007A}，或者基于用户的个人资料计算用户相似度\supercite{shi2009exploiting}。
 
 本文基于Hadoop和MapReduce大数据框架实现推荐算法。
 目前开源的Hadoop和MapReduce框架是Google的GFS、BigTable、MapReduce三种技术的衍生版本。
-Google于为了解决大数据处理等技术问题，发表了三篇论文，其中描述了GFS、BigTable、MapReduce三种技术\parencite{Ghemawat2004MapReduce,Ghemawat2003The,Chang2008Bigtable}，
+Google于为了解决大数据处理等技术问题，发表了三篇论文，其中描述了GFS、BigTable、MapReduce三种技术\supercite{Ghemawat2004MapReduce,Ghemawat2003The,Chang2008Bigtable}，
 但是Google并没有公布这三种技术的实现方法。因此雅虎等互联网公司联合起来，并在2006年建立了开源项目Hadoop，目的是根据GFS、BigTable、MapReduce，实现开源分布式数据处理系统。
 除了Hadoop和MapReduce，目前Hadoop开源项目还包括一系列自动化部署、管理Hadoop和MapReduce的辅助工具，如YARN、ZooKeeper，还包括基于Hadoop实现的关系型数据库HBase。
 另外，基于Hadoop的算法引擎Spark以及数据挖掘算法库Mahout为大数据处理提供极大便利。

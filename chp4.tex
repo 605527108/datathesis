@@ -184,7 +184,7 @@
 
 由于测试数据的限制，本文无法对系统整体测试，只能按照各模块的功能进行测试。
 在图\ref{fig:systemflow}中，关键步骤为第二步语义分析及内容分类以及第四步协同过滤预测。
-在语义分析及内容分类步骤中，本文采用了精确度较高的ICTCLAS中文分词系统\parencite{Zhang2003CLA}。
+在语义分析及内容分类步骤中，本文采用了精确度较高的ICTCLAS中文分词系统\supercite{Zhang2003CLA}。
 ICTCLAS中文分词系统的各项测试数据在其下载页面已有详细介绍，本文不再重复。
 
 在协同过滤预测步骤中，采用了4个不同的数据集，分别是：
@@ -232,12 +232,12 @@ F= 2* \frac{precision*recall}{precision+recall}
  \hline
 数据集 & 训练集大小 & F1 score \\ \hline
 MovieLens & 576MB & 0.0823 \\ \hline
-Aliyun contest & 516 & 0.0644 \\ \hline
+Aliyun contest & 516MB & 0.0644 \\ \hline
 Yahoo! R2 & 6.4GB & 0.0876 \\ \hline
 Yahoo! C15 & 6.0GB & 0.0713 \\ \hline
 \end{tabular}
 \end{center}
-\pgfplotsset{compat=1.13}
+\pgfplotsset{width=10cm,compat=1.13}
 \begin{center}
 \begin{tikzpicture}
 \begin{axis}[
@@ -253,9 +253,9 @@ Yahoo! C15 & 6.0GB & 0.0713 \\ \hline
     nodes near coords align={vertical},
     x tick label style={rotate=45,anchor=east},
     ]
-    \addplot coordinates {(U10,42) (M10,43) (U20,41) (M20,42)
+    \addplot[fill=darkgray] coordinates {(U10,42) (M10,43) (U20,41) (M20,42)
          (U50,35)(M50,48) (U100,37)(M100,60)};
-    \addplot coordinates {(U10,46) (M10,52) (U20,44) (M20,59)
+    \addplot[fill=red!20!white] coordinates {(U10,46) (M10,52) (U20,44) (M20,59)
          (U50,52)(M50,96) (U100,87)(M100,161)};
 	 \legend{MovieLens,Yahoo! C15}
 \end{axis}
@@ -276,7 +276,7 @@ Yahoo! C15 & 6.0GB & 0.0713 \\ \hline
 这表明对于包含百万级交互信息的数据，本文的计算方法每天能进行几百次矩阵因子化计算。
 
 除了做性能分析，本文还对Hadoop的并行运算能力做了测试。
-根据Amdahl\parencite{Amdahl1967Validity}提出的衡量并行计算能力的公式
+根据Amdahl\supercite{Amdahl1967Validity}提出的衡量并行计算能力的公式
 \begin{equation}
 S_p = \frac{T_1}{T_p}
 \end{equation}
@@ -284,7 +284,7 @@ S_p = \frac{T_1}{T_p}
 其中$S_p$代表并行计算加速倍数，$T_1$代表仅使用1个运算节点处理目标数据集所用时间，$T_p$代表使用$p$个运算节点处理目标数据集所用时间。
 下面我们从MovieLens数据集中随机选取某固定大小的子集进行$S_p$的计算。
 \begin{center}
-\pgfplotsset{compat=1.13}
+\pgfplotsset{width=9cm,compat=1.13}
 \begin{tikzpicture} 
 \begin{axis}[
     ylabel={$S_p$},
